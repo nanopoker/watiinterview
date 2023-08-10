@@ -4,6 +4,10 @@ import (
   "net/http"
   "fmt"
   "github.com/gin-gonic/gin"
+	"net/http/httptest"
+	"testing"
+	"bytes"
+	"github.com/stretchr/testify/assert"
 )
 
 type IntegerBody struct {
@@ -11,15 +15,9 @@ type IntegerBody struct {
     Int2 int
 }
 
-func main() {
-  r := gin.Default()
-  r.GET("/ping", func(c *gin.Context) {
-    c.JSON(http.StatusOK, gin.H{
-      "message": "pong",
-    })
-  })
-
-  // return the sum of tow integers
+func setupRouter() *gin.Engine {
+	r := gin.Default()
+	// return the sum of tow integers
   r.POST("/add", func(c *gin.Context) {
     var requestBody IntegerBody
     if err := c.BindJSON(&requestBody); err != nil {
@@ -31,6 +29,22 @@ func main() {
       "sum is": sum,
     })
   })
-  
-  r.Run(":10000") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+    return r
+}
+
+func main() {
+	r := setupRouter()
+	r.Run(":10000")
+}
+
+func TestAddRoute(t *testing.T) {
+	router := setupRouter()
+
+	w := httptest.NewRecorder()
+	jsonBody := []byte(`{"Int1": 20, "Int2": 15}`)
+ 	bodyReader := bytes.NewReader(jsonBody)
+	req, _ := http.NewRequest("POST", "/add", bodyReader)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
 }
