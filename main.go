@@ -8,6 +8,9 @@ import (
 	"testing"
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	//"os"
+	"io/ioutil"
+	"encoding/binary"
 )
 
 type IntegerBody struct {
@@ -25,6 +28,16 @@ func setupRouter() *gin.Engine {
     }
     var sum int
     sum = requestBody.Int1 + requestBody.Int2
+
+    //file, err := os.OpenFile("/root/project/job/watiinterview/sum.txt", os.O_WRONLY|os.O_CREATE, 0666)
+	data := int64(sum)
+	bytebuf := bytes.NewBuffer([]byte{})
+	binary.Write(bytebuf, binary.BigEndian, data)
+    if err := ioutil.WriteFile("/root/project/job/watiinterview/sum.txt", bytebuf.Bytes(), 0666); err != nil{
+		fmt.Println("Writefile Error =", err)
+		return
+	}
+
     c.JSON(http.StatusOK, gin.H{
       "sum is": sum,
     })
